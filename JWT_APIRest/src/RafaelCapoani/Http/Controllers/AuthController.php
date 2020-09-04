@@ -25,12 +25,12 @@
                 $payload = json_encode($payload);
 
                 //Base 64
-                $header = base64_encode($header);
-                $payload = base64_encode($payload);
+                $header = $this->base64urlEncode($header);
+                $payload = $this->base64urlEncode($payload);
 
                 //Sign
                 $sign = hash_hmac('sha256', $header . "." . $payload, $key, true);
-                $sign = base64_encode($sign);
+                $sign = $this->base64urlEncode($sign);
 
                 //Token
                 $token = $header . '.' . $payload . '.' . $sign;
@@ -58,7 +58,7 @@
 
                 //Conferir Assinatura
                 $valid = hash_hmac('sha256', $header . "." . $payload, '123456', true);
-                $valid = base64_encode($valid);
+                $valid = $this->base64urlEncode($valid);
 
                 if ($sign === $valid) {
                     return true;
@@ -66,5 +66,33 @@
             }
 
             return false;
-        } 
+        }
+        
+        /*Criei os dois métodos abaixo, pois o jwt.io agora recomenda o uso do 'base64url_encode' no lugar do 'base64_encode'*/
+        private function base64urlEncode($data)
+        {
+            // First of all you should encode $data to Base64 string
+            $b64 = base64_encode($data);
+
+            // Make sure you get a valid result, otherwise, return FALSE, as the base64_encode() function do
+            if ($b64 === false) {
+                return false;
+            }
+
+            // Convert Base64 to Base64URL by replacing “+” with “-” and “/” with “_”
+            $url = strtr($b64, '+/', '-_');
+
+            // Remove padding character from the end of line and return the Base64URL result
+            return rtrim($url, '=');
+        }
+
+                    
+        /*private function base64url_decode($data, $strict = false)
+        {
+            // Convert Base64URL to Base64 by replacing “-” with “+” and “_” with “/”
+            $b64 = strtr($data, '-_', '+/');
+
+            // Decode Base64 string and return the original data
+            return base64_decode($b64, $strict);
+        }*/
     }
